@@ -133,7 +133,10 @@ namespace NuGet.Protocol
 
                     Func<HttpRequestMessage> requestFactory = () =>
                     {
-                        var request = HttpRequestMessageFactory.Create(HttpMethod.Get, uri, log);
+                        var request = HttpRequestMessageFactory.Create(
+                            HttpMethod.Get,
+                            uri,
+                            new HttpRequestMessageConfiguration(logger: log));
 
                         foreach (var acceptHeaderValue in acceptHeaderValues)
                         {
@@ -256,7 +259,10 @@ namespace NuGet.Protocol
             CancellationToken token)
         {
             Func<Task<HttpResponseMessage>> request = () => SendWithRetrySupportAsync(
-                () => HttpRequestMessageFactory.Create(HttpMethod.Get, uri, log),
+                () => HttpRequestMessageFactory.Create(
+                    HttpMethod.Get,
+                    uri,
+                    new HttpRequestMessageConfiguration(logger: log)),
                 DefaultRequestTimeout,
                 log,
                 token);

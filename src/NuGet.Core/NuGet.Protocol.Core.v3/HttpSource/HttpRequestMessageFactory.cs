@@ -18,22 +18,26 @@ namespace NuGet.Protocol
         /// </summary>
         /// <param name="method">Desired HTTP verb</param>
         /// <param name="requestUri">Request URI</param>
-        /// <param name="log">Logger instance to be attached</param>
+        /// <param name="configuration">The request configuration</param>
         /// <returns>Instance of <see cref="HttpRequestMessage"/></returns>
-        public static HttpRequestMessage Create(HttpMethod method, string requestUri, ILogger log)
+        public static HttpRequestMessage Create(
+            HttpMethod method,
+            string requestUri,
+            HttpRequestMessageConfiguration configuration)
         {
             if (requestUri == null)
             {
                 throw new ArgumentNullException(nameof(requestUri));
             }
 
-            if (log == null)
+            if (configuration == null)
             {
-                throw new ArgumentNullException(nameof(log));
+                throw new ArgumentNullException(nameof(configuration));
             }
 
             var request = new HttpRequestMessage(method, requestUri);
-            request.SetLogger(log);
+            request.SetConfiguration(configuration);
+
             return request;
         }
 
@@ -42,22 +46,26 @@ namespace NuGet.Protocol
         /// </summary>
         /// <param name="method">Desired HTTP verb</param>
         /// <param name="requestUri">Request URI</param>
-        /// <param name="log">Logger instance to be attached</param>
+        /// <param name="configuration">The request configuration</param>
         /// <returns>Instance of <see cref="HttpRequestMessage"/></returns>
-        public static HttpRequestMessage Create(HttpMethod method, Uri requestUri, ILogger log)
+        public static HttpRequestMessage Create(
+            HttpMethod method,
+            Uri requestUri,
+            HttpRequestMessageConfiguration configuration)
         {
             if (requestUri == null)
             {
                 throw new ArgumentNullException(nameof(requestUri));
             }
 
-            if (log == null)
+            if (configuration == null)
             {
-                throw new ArgumentNullException(nameof(log));
+                throw new ArgumentNullException(nameof(configuration));
             }
 
             var request = new HttpRequestMessage(method, requestUri);
-            request.SetLogger(log);
+            request.SetConfiguration(configuration);
+
             return request;
         }
     }

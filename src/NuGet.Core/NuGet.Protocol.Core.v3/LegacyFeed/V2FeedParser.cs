@@ -434,7 +434,10 @@ namespace NuGet.Protocol
             return await _httpSource.ProcessResponseAsync(
                 () =>
                 {
-                    var request = HttpRequestMessageFactory.Create(HttpMethod.Get, uri, log);
+                    var request = HttpRequestMessageFactory.Create(
+                        HttpMethod.Get,
+                        uri,
+                        new HttpRequestMessageConfiguration(logger: log));
                     request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/atom+xml"));
                     request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
                     return request;
