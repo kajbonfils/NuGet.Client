@@ -383,10 +383,10 @@ namespace NuGetVSExtension
                 this._dte,
                 VisualStudioAccountProvider.FactoryMethod,
                 this._outputConsoleLogger.OutputConsole.WriteLine);
-            var vstsProvider = importer.GetProvider();
-            if (vstsProvider != null)
+            var importedProviders = importer.GetProviders();
+            if (importedProviders.Any())
             {
-                credentialProviders.Add(vstsProvider);
+                credentialProviders.AddRange(importedProviders);
             }
 
             var webProxy = (IVsWebProxy)GetService(typeof(SVsWebProxy));

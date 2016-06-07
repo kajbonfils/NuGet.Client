@@ -2,8 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
+using System.Linq;
 using EnvDTE;
 using Microsoft.VisualStudio.ComponentModelHost;
 using NuGet.Credentials;
@@ -74,33 +76,36 @@ namespace NuGetVSExtension
             _initializer = initializer ?? Initialize;
         }
 
-        [Import("VisualStudioAccountProvider", typeof(IVsCredentialProvider), AllowDefault = true)]
-        public IVsCredentialProvider ImportedProvider { get; set; }
+        [ImportMany(typeof(IVsCredentialProvider))]
+        public IEnumerable<IVsCredentialProvider> ImportedProviders { get; set; }
 
         /// <summary>
         /// Plugin providers are entered loaded the same way as other nuget extensions,
         /// matching any extension named CredentialProvider.*.exe.
         /// </summary>
         /// <returns>An enumeration of plugin providers</returns>
-        public ICredentialProvider GetProvider()
+        public IReadOnlyCollection<ICredentialProvider> GetProviders()
         {
             this._initializer();
-            ICredentialProvider result = null;
+            var results = new List<ICredentialProvider>();
 
-            if (ImportedProvider != null)
+            if (ImportedProviders != null)
             {
-                result = new VsCredentialProviderAdapter(ImportedProvider);
+                foreach (var importedProvider in ImportedProviders)
+                {
+                    results.Add(new VsCredentialProviderAdapter(importedProvider));
+                }
             }
 
             // Dev15+ will provide a credential provider for VSTS.
             // If we are in Dev14, and no imported VSTS provider is found,
             // then fallback on the built-in VisualStudioAccountProvider
-            if (result == null && IsDev14)
+            if (!results.Any() && IsDev14)
             {
                 // Handle any type load exception constructing the provider
                 try
                 {
-                    result = this._fallbackProviderFactory();
+                    results.Add(this._fallbackProviderFactory());
                 }
                 catch (Exception e) when (e is BadImageFormatException || e is FileLoadException)
                 {
@@ -108,7 +113,7 @@ namespace NuGetVSExtension
                 }
             }
 
-            return result;
+            return results;
         }
 
         private void Initialize()
