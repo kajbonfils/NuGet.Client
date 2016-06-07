@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NuGet.Common;
+using System.Globalization;
 
 namespace NuGet.Configuration
 {
@@ -14,6 +15,8 @@ namespace NuGet.Configuration
         public const string ConfigSection = "config";
         public const string GlobalPackagesFolderKey = "globalPackagesFolder";
         public const string GlobalPackagesFolderEnvironmentKey = "NUGET_PACKAGES";
+        public const string HttpCacheFolderKey = "httpCacheFolder";
+        public const string HttpCacheFolderEnvironmentKey = "NUGET_HTTP_CACHE";
         public const string RepositoryPathKey = "repositoryPath";
         public static readonly string DefaultGlobalPackagesFolderPath = "packages" + Path.DirectorySeparatorChar;
 
@@ -137,11 +140,7 @@ namespace NuGet.Configuration
             if (string.IsNullOrEmpty(path))
             {
                 // Environment variable for globalPackagesFolder is not set.
-                // Try and get it from nuget settings
-
-                // GlobalPackagesFolder path may be relative path. If so, it will be considered relative to
-                // the solution directory, just like the 'repositoryPath' setting
-                path = settings.GetValue(ConfigSection, GlobalPackagesFolderKey, isPath: false);
+                path = settings.GetValue(ConfigSection, GlobalPackagesFolderKey, isPath: true);
             }
 
             if (!string.IsNullOrEmpty(path))
@@ -196,6 +195,31 @@ namespace NuGet.Configuration
             }
 
             return source;
+        }
+
+        private static string GetPathFromEnvOrConfig(string envVarName, string configKey, ISettings settings)
+        {
+            var path = Environment.GetEnvironmentVariable(envVarName);
+
+            if (!string.IsNullOrEmpty(path))
+            {
+                if (!Path.IsPathRooted(path))
+                {
+                    var message = String.Format(CultureInfo.CurrentCulture, Resources.RelativeEnvVarPath, envVarName, path);
+                    throw new NuGetConfigurationException(message);
+                }
+            }
+            else
+            {
+                path = Path.Combine(NuGetEnvironment.GetFolderPath(NuGetFolderPath.NuGetHome), DefaultGlobalPackagesFolderPath);
+            }
+
+            if (!string.IsNullOrEmpty(path))
+            {
+                path = path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+            }
+
+            return path;
         }
     }
 }

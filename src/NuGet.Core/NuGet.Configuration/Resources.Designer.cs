@@ -105,6 +105,15 @@ namespace NuGet.Configuration {
         }
         
         /// <summary>
+        ///    Looks up a localized string similar to Environment variable &apos;{0}&apos; must contain an absolute path, the full path of &apos;{1}&apos; cannot be determined..
+        /// </summary>
+        public static string RelativeEnvVarPath {
+            get {
+                return ResourceManager.GetString("RelativeEnvVarPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///    Looks up a localized string similar to Parameter &apos;fileName&apos; to Settings must be just a fileName and not a path.
         /// </summary>
         public static string Settings_FileName_Cannot_Be_A_Path {
