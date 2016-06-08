@@ -204,6 +204,15 @@ namespace NuGet.Packaging {
         }
         
         /// <summary>
+        ///    Looks up a localized string similar to &apos;{0}&apos; must contain an absolute path &apos;{1}&apos;..
+        /// </summary>
+        public static string MustContainAbsolutePath {
+            get {
+                return ResourceManager.GetString("MustContainAbsolutePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///    Looks up a localized string similar to Package entry already exists in packages.config. Id: {0}.
         /// </summary>
         public static string PackageEntryAlreadyExist {

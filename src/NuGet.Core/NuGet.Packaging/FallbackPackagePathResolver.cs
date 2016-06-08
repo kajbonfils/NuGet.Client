@@ -1,16 +1,22 @@
-﻿using NuGet.Packaging.Core;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using NuGet.Common;
+using NuGet.Versioning;
 
 namespace NuGet.Packaging
 {
     public class FallbackPackagePathResolver
     {
-        private readonly List<string> _packageFolders;
+        private readonly List<VersionFolderPathResolver> _pathResolvers;
+
+        public FallbackPackagePathResolver(INuGetPathContext pathContext)
+            : this(pathContext?.GlobalPackagesFolder, pathContext?.FallbackPackagesFolders)
+        {
+
+        }
 
         public FallbackPackagePathResolver(string userPackagesFolder, IEnumerable<string> fallbackPackageFolders)
         {
@@ -24,30 +30,77 @@ namespace NuGet.Packaging
                 throw new ArgumentNullException(nameof(userPackagesFolder));
             }
 
-            _packageFolders = new List<string>();
-            var uniquePaths = new HashSet<string>(StringComparer.Ordinal);
+            var packageFolders = new List<string>();
 
-            uniquePaths.Add(userPackagesFolder);
-            _packageFolders.Add(userPackagesFolder);
-
-
-            _packageFolders.AddRange(fallbackPackageFolders);
-
-            // Ensure all paths are absolute
-            foreach (var path in _packageFolders)
+            // The user's packages folder may not exist, this is expected if the fallback
+            // folders contain all packages.
+            if (Directory.Exists(userPackagesFolder))
             {
-                if (!Path.IsPathRooted(path))
-                {
-                    var message = string.Format(
-                        CultureInfo.CurrentCulture,
-                        Strings.AbsolutePathRequired,
-                        path);
+                packageFolders.Add(userPackagesFolder);
+            }
 
-                    throw new PackagingException(message);
+            // All fallback folders must exist
+            foreach (var path in fallbackPackageFolders)
+            {
+                if (!Directory.Exists(path))
+                {
+                    throw new DirectoryNotFoundException(path);
+                }
+
+                packageFolders.Add(path);
+            }
+
+            // Create path resolvers for each source.
+            _pathResolvers = packageFolders.Select(path => new VersionFolderPathResolver(path)).ToList();
+        }
+
+        /// <summary>
+        /// Returns the root directory of an installed package.
+        /// </summary>
+        /// <param name="packageId">Package id.</param>
+        /// <param name="version">Package version.</param>
+        /// <returns>Returns the path if the package exists in any of the folders. Null if the package does not exist.</returns>
+        public string GetPackageDirectory(string packageId, string version)
+        {
+            return GetPackageDirectory(packageId, NuGetVersion.Parse(version));
+        }
+
+        /// <summary>
+        /// Returns the root directory of an installed package.
+        /// </summary>
+        /// <param name="packageId">Package id.</param>
+        /// <param name="version">Package version.</param>
+        /// <returns>Returns the path if the package exists in any of the folders. Null if the package does not exist.</returns>
+        public string GetPackageDirectory(string packageId, NuGetVersion version)
+        {
+            if (string.IsNullOrEmpty(packageId))
+            {
+                throw new ArgumentException(
+                    string.Format(
+                    CultureInfo.CurrentCulture,
+                    Strings.StringCannotBeNullOrEmpty,
+                    nameof(packageId)));
+            }
+
+            if (version == null)
+            {
+                throw new ArgumentNullException(nameof(version));
+            }
+
+            // Check each folder for the package.
+            foreach (var resolver in _pathResolvers)
+            {
+                var hashPath = resolver.GetHashPath(packageId, version);
+
+                if (File.Exists(hashPath))
+                {
+                    // If the hash exists we can use this path
+                    return resolver.GetInstallPath(packageId, version);
                 }
             }
 
-            _packageFolders = packageFolders.ToList();
+            // Not found
+            return null;
         }
     }
 }

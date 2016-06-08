@@ -96,6 +96,15 @@ namespace NuGet.Configuration {
         }
         
         /// <summary>
+        ///    Looks up a localized string similar to &apos;{0}&apos; must contain an absolute path &apos;{1}&apos;..
+        /// </summary>
+        public static string MustContainAbsolutePath {
+            get {
+                return ResourceManager.GetString("MustContainAbsolutePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///    Looks up a localized string similar to The package source does not belong to the collection of available sources..
         /// </summary>
         public static string PackageSource_Invalid {

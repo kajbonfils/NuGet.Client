@@ -15,8 +15,7 @@ namespace NuGet.Configuration
         public const string ConfigSection = "config";
         public const string GlobalPackagesFolderKey = "globalPackagesFolder";
         public const string GlobalPackagesFolderEnvironmentKey = "NUGET_PACKAGES";
-        public const string HttpCacheFolderKey = "httpCacheFolder";
-        public const string HttpCacheFolderEnvironmentKey = "NUGET_HTTP_CACHE";
+        public const string FallbackPackagesFolderEnvironmentKey = "NUGET_FALLBACK_PACKAGES";
         public const string RepositoryPathKey = "repositoryPath";
         public static readonly string DefaultGlobalPackagesFolderPath = "packages" + Path.DirectorySeparatorChar;
 
@@ -142,6 +141,11 @@ namespace NuGet.Configuration
                 // Environment variable for globalPackagesFolder is not set.
                 path = settings.GetValue(ConfigSection, GlobalPackagesFolderKey, isPath: true);
             }
+            else
+            {
+                // Verify the path is absolute
+                VerifyPathIsRooted(GlobalPackagesFolderEnvironmentKey, path);
+            }
 
             if (!string.IsNullOrEmpty(path))
             {
@@ -152,6 +156,50 @@ namespace NuGet.Configuration
             path = Path.Combine(NuGetEnvironment.GetFolderPath(NuGetFolderPath.NuGetHome), DefaultGlobalPackagesFolderPath);
 
             return path;
+        }
+
+        public static IReadOnlyList<string> GetFallbackPackagesFolders(ISettings settings)
+        {
+            if (settings == null)
+            {
+                throw new ArgumentNullException(nameof(settings));
+            }
+
+            var paths = new List<string>();
+
+            var envValue = Environment.GetEnvironmentVariable(FallbackPackagesFolderEnvironmentKey);
+
+            if (string.IsNullOrEmpty(envValue))
+            {
+                // read config values
+                paths.AddRange(GetFallbackPackagesFoldersFromConfig(settings));
+            }
+            else
+            {
+                paths.AddRange(envValue.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries));
+
+                // Verify the path is absolute
+                foreach (var path in paths)
+                {
+                    VerifyPathIsRooted(FallbackPackagesFolderEnvironmentKey, path);
+                }
+            }
+
+            for (int i=0; i < paths.Count; i++)
+            {
+                paths[i] = paths[i].Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+            }
+
+            return paths;
+        }
+
+        private static IReadOnlyList<string> GetFallbackPackagesFoldersFromConfig(ISettings settings)
+        {
+            var settingsValue = new List<SettingValue>();
+            var sourceSettingValues = settings.GetSettingValues(ConfigurationConstants.FallbackPackageFolders, isPath: true) ??
+                                      Enumerable.Empty<SettingValue>();
+
+            return settingsValue.Select(setting => setting.Value).ToList();
         }
 
         public static string GetHttpCacheFolder(ISettings settings)
@@ -220,6 +268,23 @@ namespace NuGet.Configuration
             }
 
             return path;
+        }
+
+        /// <summary>
+        /// Throw if a path is relative.
+        /// </summary>
+        private static void VerifyPathIsRooted(string key, string path)
+        {
+            if (!Path.IsPathRooted(path))
+            {
+                var message = string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resources.MustContainAbsolutePath,
+                    key,
+                    path);
+
+                throw new NuGetConfigurationException(message);
+            }
         }
     }
 }
