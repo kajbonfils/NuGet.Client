@@ -238,6 +238,7 @@ namespace NuGet.Test
                     GetExternalProjectReferenceContext(),
                     sources,
                     effectiveGlobalPackagesFolder,
+                    Enumerable.Empty<string>(),
                     CancellationToken.None);
 
                 // Assert
@@ -286,6 +287,7 @@ namespace NuGet.Test
                     GetExternalProjectReferenceContext(),
                     sources,
                     packagesFolder,
+                    Enumerable.Empty<string>(),
                     CancellationToken.None);
 
                 var projects = new List<BuildIntegratedNuGetProject>() { project };
@@ -348,6 +350,7 @@ namespace NuGet.Test
                     GetExternalProjectReferenceContext(),
                     sources,
                     packagesFolder,
+                    Enumerable.Empty<string>(),
                     CancellationToken.None);
 
                 var projects = new List<BuildIntegratedNuGetProject>() { project };
@@ -410,6 +413,7 @@ namespace NuGet.Test
                     GetExternalProjectReferenceContext(),
                     sources,
                     packagesFolder,
+                    Enumerable.Empty<string>(),
                     CancellationToken.None);
 
                 var projects = new List<BuildIntegratedNuGetProject>() { project };
@@ -472,6 +476,7 @@ namespace NuGet.Test
                     GetExternalProjectReferenceContext(),
                     sources,
                     effectiveGlobalPackagesFolder,
+                    Enumerable.Empty<string>(),
                     CancellationToken.None);
 
                 var projects = new List<BuildIntegratedNuGetProject>() { project };
@@ -530,6 +535,7 @@ namespace NuGet.Test
                     GetExternalProjectReferenceContext(),
                     sources,
                     effectiveGlobalPackagesFolder,
+                    Enumerable.Empty<string>(),
                     CancellationToken.None);
 
                 var projects = new List<BuildIntegratedNuGetProject>() { project };
@@ -896,6 +902,7 @@ namespace NuGet.Test
                     GetExternalProjectReferenceContext(),
                     sources,
                     effectiveGlobalPackagesFolder,
+                    Enumerable.Empty<string>(),
                     CancellationToken.None);
 
                 // Assert
@@ -937,6 +944,7 @@ namespace NuGet.Test
                     GetExternalProjectReferenceContext(),
                     sources,
                     effectiveGlobalPackagesFolder,
+                    Enumerable.Empty<string>(),
                     CancellationToken.None);
 
                 var format = new LockFileFormat();
@@ -953,6 +961,7 @@ namespace NuGet.Test
                     GetExternalProjectReferenceContext(),
                     sources,
                     effectiveGlobalPackagesFolder,
+                    Enumerable.Empty<string>(),
                     CancellationToken.None);
 
                 // Assert
@@ -1015,6 +1024,7 @@ namespace NuGet.Test
                     context,
                     sources,
                     effectiveGlobalPackagesFolder,
+                    Enumerable.Empty<string>(),
                     CancellationToken.None);
 
                 // Assert

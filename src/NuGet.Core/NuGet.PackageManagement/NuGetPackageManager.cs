@@ -136,7 +136,7 @@ namespace NuGet.PackageManagement
             InitializePackagesFolderInfo(PackagesFolderPathUtility.GetPackagesFolderPath(SolutionManager, Settings), excludeVersion);
             DeleteOnRestartManager = deleteOnRestartManager;
 
-            string globalPackagesFolder = BuildIntegratedProjectUtility.GetEffectiveGlobalPackagesFolderOrNull(solutionManager.SolutionDirectory, settings);
+            string globalPackagesFolder = SettingsUtility.GetGlobalPackagesFolder(settings);
             if (globalPackagesFolder != null)
             {
                 var globalPackagesSource = new Configuration.PackageSource(globalPackagesFolder);
@@ -1866,9 +1866,7 @@ namespace NuGet.PackageManagement
             var logger = new ProjectContextLogger(nuGetProjectContext);
             var buildIntegratedContext = new ExternalProjectReferenceContext(logger);
 
-            var effectiveGlobalPackagesFolder = BuildIntegratedProjectUtility.GetEffectiveGlobalPackagesFolder(
-                                                    SolutionManager?.SolutionDirectory,
-                                                    Settings);
+            var pathContext = NuGetPathContext.Create(Settings);
 
             // For installs only use cache entries newer than the current time.
             // This is needed for scenarios where a new package shows up in search
@@ -1880,7 +1878,8 @@ namespace NuGet.PackageManagement
                 cacheContext.ListMaxAge = DateTimeOffset.UtcNow;
 
                 var providers = RestoreCommandProviders.Create(
-                    effectiveGlobalPackagesFolder,
+                    pathContext.UserPackagesFolder,
+                    pathContext.FallbackPackagesFolders,
                     sources,
                     cacheContext,
                     logger);
@@ -2032,9 +2031,7 @@ namespace NuGet.PackageManagement
                         restoreResult.LockFile),
                     PackageIdentity.Comparer);
 
-                var effectiveGlobalPackagesFolder = BuildIntegratedProjectUtility.GetEffectiveGlobalPackagesFolder(
-                                                        SolutionManager?.SolutionDirectory,
-                                                        Settings);
+                var pathContext = NuGetPathContext.Create(Settings);
 
                 // Find all dependencies in sorted order, then using the order run init.ps1 for only the new packages.
                 foreach (var package in sortedPackages)
@@ -2043,7 +2040,7 @@ namespace NuGet.PackageManagement
                     {
                         var packageInstallPath =
                             BuildIntegratedProjectUtility.GetPackagePathFromGlobalSource(
-                                effectiveGlobalPackagesFolder,
+                                pathContext.UserPackagesFolder,
                                 package);
 
                         await buildIntegratedProject.ExecuteInitScriptAsync(
@@ -2071,7 +2068,8 @@ namespace NuGet.PackageManagement
                         parent,
                         referenceContext,
                         projectAction.Sources,
-                        effectiveGlobalPackagesFolder,
+                        pathContext.UserPackagesFolder,
+                        pathContext.FallbackPackagesFolders,
                         cacheContextModifier,
                         token);
                 }

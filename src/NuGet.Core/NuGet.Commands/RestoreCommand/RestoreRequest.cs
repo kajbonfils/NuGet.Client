@@ -40,6 +40,7 @@ namespace NuGet.Commands
             ILogger log)
             : this(project,
                   RestoreCommandProviders.Create(packagesDirectory,
+                    new List<string>(),
                     sources,
                     new SourceCacheContext(),
                     log),

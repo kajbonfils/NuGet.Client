@@ -4,6 +4,7 @@ using System.IO;
 using Microsoft.Dnx.Runtime.Common.CommandLine;
 using NuGet.Commands;
 using NuGet.Common;
+using NuGet.Configuration;
 using NuGet.Versioning;
 
 namespace NuGet.CommandLine.XPlat

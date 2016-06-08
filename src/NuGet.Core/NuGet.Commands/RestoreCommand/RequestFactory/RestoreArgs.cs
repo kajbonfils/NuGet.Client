@@ -93,6 +93,11 @@ namespace NuGet.Commands
             return Path.GetFullPath(Path.Combine(rootDirectory, globalPath));
         }
 
+        public IReadOnlyList<string> GetEffectiveFallbackPackagesFolders(ISettings settings)
+        {
+            return SettingsUtility.GetFallbackPackagesFolders(settings);
+        }
+
         /// <summary>
         /// Uses either Sources or Settings, and then adds Fallback sources.
         /// </summary>

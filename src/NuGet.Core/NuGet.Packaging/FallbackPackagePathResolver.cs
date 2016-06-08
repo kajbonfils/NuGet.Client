@@ -13,7 +13,7 @@ namespace NuGet.Packaging
         private readonly List<VersionFolderPathResolver> _pathResolvers;
 
         public FallbackPackagePathResolver(INuGetPathContext pathContext)
-            : this(pathContext?.GlobalPackagesFolder, pathContext?.FallbackPackagesFolders)
+            : this(pathContext?.UserPackagesFolder, pathContext?.FallbackPackagesFolders)
         {
 
         }

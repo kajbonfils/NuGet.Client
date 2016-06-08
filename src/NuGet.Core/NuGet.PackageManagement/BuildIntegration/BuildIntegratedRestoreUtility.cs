@@ -33,6 +33,7 @@ namespace NuGet.PackageManagement
             ExternalProjectReferenceContext context,
             IEnumerable<SourceRepository> sources,
             string effectiveGlobalPackagesFolder,
+            IEnumerable<string> fallbackPackageFolders,
             CancellationToken token)
         {
             return await RestoreAsync(
@@ -40,6 +41,7 @@ namespace NuGet.PackageManagement
                 context,
                 sources,
                 effectiveGlobalPackagesFolder,
+                fallbackPackageFolders,
                 c => { },
                 token);
         }
@@ -52,6 +54,7 @@ namespace NuGet.PackageManagement
             ExternalProjectReferenceContext context,
             IEnumerable<SourceRepository> sources,
             string effectiveGlobalPackagesFolder,
+            IEnumerable<string> fallbackPackageFolders,
             Action<SourceCacheContext> cacheContextModifier,
             CancellationToken token)
         {
@@ -60,6 +63,7 @@ namespace NuGet.PackageManagement
                 cacheContextModifier(cacheContext);
 
                 var providers = RestoreCommandProviders.Create(effectiveGlobalPackagesFolder,
+                    fallbackPackageFolders,
                     sources,
                     cacheContext,
                     context.Logger);
