@@ -14,6 +14,8 @@ namespace NuGet.Common
     public class MSBuildProjectSystem : MSBuildUser, IMSBuildNuGetProjectSystem
     {
         private const string TargetName = "EnsureNuGetPackageBuildImports";
+        private const string JSProjectExt = ".jsproj";
+        private const string VCXProjextExt = ".vcxproj";
         private readonly string _projectDirectory;
 
         public MSBuildProjectSystem(
@@ -46,16 +48,70 @@ namespace NuGet.Common
         {
             get
             {
-                string moniker = GetPropertyValue("TargetFrameworkMoniker");
+                string moniker = GetTargetFrameworkString();
+
                 if (String.IsNullOrEmpty(moniker))
                 {
                     return null;
                 }
-                return NuGetFramework.Parse(moniker);
+
+                var framework = NuGetFramework.Parse(moniker);
+
+                // if the framework is .net core 4.5.1 return windows 8.1
+                if (framework.Framework.Equals(FrameworkConstants.FrameworkIdentifiers.NetCore)
+                    && framework.Version.Equals(Version.Parse("4.5.1.0")))
+                {
+                    return new NuGetFramework(FrameworkConstants.FrameworkIdentifiers.Windows, Version.Parse("8.1"), framework.Profile);
+                }
+                // if the framework is .net core 4.5 return 8.0
+                if (framework.Framework.Equals(FrameworkConstants.FrameworkIdentifiers.NetCore)
+                    && framework.Version.Equals(Version.Parse("4.5.0.0")))
+                {
+                    return new NuGetFramework(FrameworkConstants.FrameworkIdentifiers.Windows, Version.Parse("8.0"), framework.Profile);
+                }
+
+                return framework;
             }
         }
 
         private dynamic Project { get; }
+
+        private string GetTargetFrameworkString()
+        {
+            var extension = GetPropertyValue("ProjectExt");
+
+            // Check for JS project
+            if (StringComparer.OrdinalIgnoreCase.Equals(JSProjectExt, extension))
+            {
+                // JavaScript apps do not have a TargetFrameworkMoniker property set.
+                // We read the TargetPlatformIdentifier and TargetPlatformVersion instead
+                var platformIdentifier = GetPropertyValue("TargetPlatformIdentifier");
+                var platformVersion = GetPropertyValue("TargetPlatformVersion");
+
+                // use the default values for JS if they were not given
+                if (string.IsNullOrEmpty(platformVersion))
+                {
+                    platformVersion = "0.0";
+                }
+
+                if (string.IsNullOrEmpty(platformIdentifier))
+                {
+                    platformIdentifier = "Windows";
+                }
+
+                return string.Format(CultureInfo.InvariantCulture, "{0}, Version={1}", platformIdentifier, platformVersion);
+            }
+
+            // Check for C++ project
+            if (StringComparer.OrdinalIgnoreCase.Equals(VCXProjextExt, extension))
+            {
+                // The C++ project does not have a TargetFrameworkMoniker property set. 
+                // We hard-code the return value to Native.
+                return "Native, Version=0.0";
+            }
+
+            return GetPropertyValue("TargetFrameworkMoniker");
+        }
 
         public void AddBindingRedirects()
         {
@@ -134,7 +190,7 @@ namespace NuGet.Common
                 var assemblyName = AssemblyName.GetAssemblyName(fullPath);
                 assemblyFileName = assemblyName.FullName;
             }
-            catch(Exception)
+            catch (Exception)
             {
                 //ignore exception if we weren't able to get assembly strong name, we'll still use assembly file name to add reference
             }
