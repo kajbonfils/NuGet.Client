@@ -2226,7 +2226,7 @@ namespace NuGet.PackageManagement
             CancellationToken token)
         {
             // TODO: EnsurePackageCompatibility check should be performed in preview. Can easily avoid a lot of rollback
-            EnsurePackageCompatibility(resourceResult, packageIdentity);
+            EnsurePackageCompatibility(nuGetProject, resourceResult, packageIdentity);
 
             packageWithDirectoriesToBeDeleted.Remove(packageIdentity);
             return nuGetProject.InstallPackageAsync(packageIdentity, resourceResult, nuGetProjectContext, token);
@@ -2474,7 +2474,10 @@ namespace NuGet.PackageManagement
             }
         }
 
-        private static void EnsurePackageCompatibility(DownloadResourceResult downloadResourceResult, PackageIdentity packageIdentity)
+        private static void EnsurePackageCompatibility(
+            NuGetProject nuGetProject,
+            DownloadResourceResult downloadResourceResult,
+            PackageIdentity packageIdentity)
         {
             NuspecReader nuspecReader;
 
@@ -2496,26 +2499,42 @@ namespace NuGet.PackageManagement
             // Validate the package type. There must be zero package types or exactly one package
             // type that is one of the recognized package types.
             var packageTypes = nuspecReader.GetPackageTypes();
-            var validPackageType = true;
+            var identityString = packageIdentity.Id + " " + packageIdentity.Version.ToNormalizedString();
 
             if (packageTypes.Count > 1)
             {
-                validPackageType = false;
+                throw new PackagingException(string.Format(
+                    CultureInfo.CurrentCulture,
+                    Strings.MultiplePackageTypesNotSupported,
+                    identityString));
             }
             else if (packageTypes.Count == 1)
             {
                 var packageType = packageTypes[0];
-                if (packageType != PackageType.Legacy)
-                {
-                    validPackageType = false;
-                }
-            }
+                var projectName = NuGetProject.GetUniqueNameOrName(nuGetProject);
 
-            if (!validPackageType)
-            {
-                throw new MinClientVersionException(
-                    string.Format(CultureInfo.CurrentCulture, Strings.UnsupportedPackageFeature,
-                    packageIdentity.Id + " " + packageIdentity.Version.ToNormalizedString()));
+                if (packageType == PackageType.Legacy || // Added for "quirks mode", but not yet fully implemented.
+                    packageType == PackageType.Dependency) // A package explicitly stated as a dependency.
+                {
+                    // These types are always acceptable.
+                }
+                else if (nuGetProject is ProjectKNuGetProjectBase &&
+                         packageType == PackageType.DotnetCliTool)
+                {
+                    // ProjectKNuGetProjectBase projects are .NET Core (both "dotnet" and "dnx").
+                    // .NET CLI tools are support for "dotnet" projects. The projects eventually
+                    // call into INuGetPackageManager, which is not implemented by NuGet. This code
+                    // will make the decision of how to install the .NET CLI tool package.
+                }
+                else
+                {
+                    throw new PackagingException(string.Format(
+                        CultureInfo.CurrentCulture,
+                        Strings.UnsupportedPackageType,
+                        identityString,
+                        packageType.Name,
+                        projectName));
+                }
             }
         }
     }
