@@ -12,11 +12,11 @@ namespace NuGet.Configuration
 {
     public static class SettingsUtility
     {
-        public const string ConfigSection = "config";
-        public const string GlobalPackagesFolderKey = "globalPackagesFolder";
-        public const string GlobalPackagesFolderEnvironmentKey = "NUGET_PACKAGES";
-        public const string FallbackPackagesFolderEnvironmentKey = "NUGET_FALLBACK_PACKAGES";
-        public const string RepositoryPathKey = "repositoryPath";
+        public static readonly string ConfigSection = "config";
+        private const string GlobalPackagesFolderKey = "globalPackagesFolder";
+        private const string GlobalPackagesFolderEnvironmentKey = "NUGET_PACKAGES";
+        private const string FallbackPackagesFolderEnvironmentKey = "NUGET_FALLBACK_PACKAGES";
+        private const string RepositoryPathKey = "repositoryPath";
         public static readonly string DefaultGlobalPackagesFolderPath = "packages" + Path.DirectorySeparatorChar;
 
         public static string GetRepositoryPath(ISettings settings)
@@ -150,6 +150,7 @@ namespace NuGet.Configuration
             if (!string.IsNullOrEmpty(path))
             {
                 path = path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+                path = Path.GetFullPath(path);
                 return path;
             }
 
@@ -158,6 +159,9 @@ namespace NuGet.Configuration
             return path;
         }
 
+        /// <summary>
+        /// Read fallback folders from the environment variable or from nuget.config.
+        /// </summary>
         public static IReadOnlyList<string> GetFallbackPackagesFolders(ISettings settings)
         {
             if (settings == null)
@@ -188,18 +192,24 @@ namespace NuGet.Configuration
             for (int i=0; i < paths.Count; i++)
             {
                 paths[i] = paths[i].Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+                paths[i] = Path.GetFullPath(paths[i]);
             }
 
             return paths;
         }
 
+        /// <summary>
+        /// Read fallback folders only from nuget.config.
+        /// </summary>
         private static IReadOnlyList<string> GetFallbackPackagesFoldersFromConfig(ISettings settings)
         {
-            var settingsValue = new List<SettingValue>();
-            var sourceSettingValues = settings.GetSettingValues(ConfigurationConstants.FallbackPackageFolders, isPath: true) ??
+            var fallbackValues = settings.GetSettingValues(ConfigurationConstants.FallbackPackageFolders, isPath: true) ??
                                       Enumerable.Empty<SettingValue>();
 
-            return settingsValue.Select(setting => setting.Value).ToList();
+            return fallbackValues
+                .OrderByDescending(setting => setting.Priority)
+                .Select(setting => setting.Value)
+                .ToList();
         }
 
         public static string GetHttpCacheFolder(ISettings settings)

@@ -2180,12 +2180,13 @@ namespace NuGet.Configuration.Test
             {
                 ConfigurationFileTestUtility.CreateConfigurationFile(nugetConfigPath, mockBaseDirectory, config);
                 Settings settings = new Settings(mockBaseDirectory);
+                var expected = Path.GetFullPath(Path.Combine(mockBaseDirectory, @"..\..\NuGetPackages"));
 
                 // Act
                 var globalPackagesFolderPath = SettingsUtility.GetGlobalPackagesFolder(settings);
 
                 // Assert
-                Assert.Equal(@"..\..\NuGetPackages", globalPackagesFolderPath);
+                Assert.Equal(expected, globalPackagesFolderPath);
             }
         }
 
