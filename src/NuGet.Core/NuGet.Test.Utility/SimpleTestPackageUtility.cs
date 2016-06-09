@@ -272,12 +272,21 @@ namespace NuGet.Test.Utility
         /// </summary>
         public static async Task CreateFolderFeedV3(string root, PackageSaveMode saveMode, params PackageIdentity[] packages)
         {
-            var contexts = packages.Select(package => new SimpleTestPackageContext(package)).ToList();
+            var contexts = packages.Select(p => new SimpleTestPackageContext(p)).ToArray();
+
+            await CreateFolderFeedV3(root, saveMode, contexts);
+        }
+
+        /// <summary>
+        /// Create a v3 folder of nupkgs
+        /// </summary>
+        public static async Task CreateFolderFeedV3(string root, PackageSaveMode saveMode, params SimpleTestPackageContext[] contexts)
+        {
             var pathResolver = new VersionFolderPathResolver(root);
 
             using (var tempRoot = TestFileSystemUtility.CreateRandomTestFolder())
             {
-                CreatePackages(contexts, tempRoot);
+                CreatePackages(tempRoot, contexts);
 
                 foreach (var file in Directory.GetFiles(tempRoot))
                 {

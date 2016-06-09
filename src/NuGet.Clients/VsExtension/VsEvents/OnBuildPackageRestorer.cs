@@ -512,23 +512,24 @@ namespace NuGetVSExtension
 
             var projectName = NuGetProject.GetUniqueNameOrName(project);
 
-            var effectiveGlobalPackagesFolder = BuildIntegratedProjectUtility.GetEffectiveGlobalPackagesFolder(
-                                                    SolutionManager?.SolutionDirectory,
-                                                    Settings);
+            var nugetPathContext = NuGetPathContext.Create(Settings);
 
             using (var cacheContext = new SourceCacheContext())
             {
-                providerCache.GetOrCreate(effectiveGlobalPackagesFolder,
+                providerCache.GetOrCreate(
+                    nugetPathContext.UserPackagesFolder,
+                    nugetPathContext.FallbackPackagesFolders,
                     enabledSources,
                     cacheContext,
                     context.Logger);
 
                 // Pass down the CancellationToken from the dialog
                 var restoreResult = await BuildIntegratedRestoreUtility.RestoreAsync(project,
-                context,
-                enabledSources,
-                effectiveGlobalPackagesFolder,
-                token);
+                    context,
+                    enabledSources,
+                    nugetPathContext.UserPackagesFolder,
+                     nugetPathContext.FallbackPackagesFolders,
+                    token);
 
                 if (!restoreResult.Success)
                 {

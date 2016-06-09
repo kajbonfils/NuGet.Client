@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using NuGet.Test.Utility;
 using Xunit;
 
@@ -19,7 +16,6 @@ namespace NuGet.Configuration.Test
             // Assert
             Assert.Equal(0, paths.Count);
         }
-
 
         [Fact]
         public void GetFallbackPackagesFolders_SingleFolderFromNuGetConfig()
@@ -134,7 +130,7 @@ namespace NuGet.Configuration.Test
         }
 
         [Fact]
-        public void GetFallbackPackagesFolders_MultipleFoldersFromMultipleNuGetConfig()
+        public void GetFallbackPackagesFolders_MultipleFoldersFromMultipleNuGetConfigs()
         {
             // Arrange
             var configA = @"<?xml version=""1.0"" encoding=""utf-8""?>

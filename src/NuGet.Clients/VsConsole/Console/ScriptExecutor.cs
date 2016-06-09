@@ -230,9 +230,7 @@ namespace NuGetConsole
             if (!string.IsNullOrEmpty(SolutionDirectory))
             {
                 // Package not found in packages folder
-                effectiveGlobalPackagesFolder = BuildIntegratedProjectUtility.GetEffectiveGlobalPackagesFolder(
-                                                        SolutionDirectory,
-                                                        Settings);
+                effectiveGlobalPackagesFolder = SettingsUtility.GetGlobalPackagesFolder(Settings);
             }
             else
             {

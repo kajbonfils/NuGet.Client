@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
+using NuGet.Configuration;
 using NuGet.PackageManagement.UI;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
@@ -39,7 +40,7 @@ namespace NuGet.PackageManagement.PowerShellCmdlets
 
                 if (nugetProject is BuildIntegratedNuGetProject)
                 {
-                    packageFolder = BuildIntegratedProjectUtility.GetEffectiveGlobalPackagesFolder(SolutionManager.SolutionDirectory, settings);
+                    packageFolder = SettingsUtility.GetGlobalPackagesFolder(settings);
                 }
                 else
                 {
